@@ -35,7 +35,8 @@ Some parameters can be passed to `pam_setquota.so` through the PAM config:
 
 Example
 -------
-- One of the following lines can be used (/etc/pam.d/common-session on Ubuntu)
+One of the following lines can be used (/etc/pam.d/common-session on Ubuntu)
+
 	session    required     /lib/security/pam_setquota.so bsoftlimit=19000 bhardlimit=20000 isoftlimit=3000 ihardlimit=4000 startuid=1000 enduid=2000 fs=/dev/sda1
 	session    required     /lib/security/pam_setquota.so bsoftlimit=1000 bhardlimit=2000 isoftlimit=1000 ihardlimit=2000 startuid=2001 enduid=0 fs=/home
 	session    required     /lib/security/pam_setquota.so bsoftlimit=19000 bhardlimit=20000 isoftlimit=3000 ihardlimit=4000 startuid=1000 enduid=2000 fs=/dev/sda1 overwrite=1
