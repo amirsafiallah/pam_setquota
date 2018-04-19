@@ -25,6 +25,8 @@
 struct pam_params {
   uid_t start_uid;
   uid_t end_uid;
+  gid_t start_gid;
+  gid_t end_gid;
   char *fs;
   int overwrite;
   int debug;
@@ -76,6 +78,10 @@ static void _pam_parse_params(int argc, const char **argv,
       p->start_uid = strtol(*argv + 9, NULL, 10);
     else if (strncmp(*argv, "enduid=", 7) == 0)
       p->end_uid = strtol(*argv + 7, NULL, 10);
+    else if (strncmp(*argv, "startgid=", 9) == 0)
+      p->start_gid = strtol(*argv + 9, NULL, 10);
+    else if (strncmp(*argv, "endgid=", 7) == 0)
+      p->end_gid = strtol(*argv + 7, NULL, 10);
     else if (strncmp(*argv, "fs=", 3) == 0)
       p->fs = (char *)*argv + 3;
     else if (strncmp(*argv, "overwrite=", 10) == 0)
@@ -90,7 +96,7 @@ PAM_EXTERN int pam_sm_open_session(pam_handle_t *pamh, int flags, int argc,
   int retval;
   const void *user;
   const struct passwd *pwd;
-  struct pam_params param = { .start_uid = 1000, .end_uid = 0, .fs = NULL };
+  struct pam_params param = { .start_uid = 1000, .end_uid = 0 , .start_gid = 1000, .end_gid = 0, .fs = NULL };
   struct if_dqblk ndqblk;
   FILE *fd;
   char mntdevice[BUFSIZ], mntpoint[BUFSIZ];
@@ -116,10 +122,16 @@ PAM_EXTERN int pam_sm_open_session(pam_handle_t *pamh, int flags, int argc,
     return PAM_CRED_INSUFFICIENT;
   }
 
-  /* Check if we should not set quotas for user */
+  /* Check uid if we should not set quotas for user */
   if ((pwd->pw_uid < param.start_uid) ||
       ((param.end_uid >= param.start_uid) && (param.start_uid != 0) &&
        (pwd->pw_uid > param.end_uid)))
+    return PAM_SUCCESS;
+
+  /* Check gid if we should not set quotas for user */
+  if ((pwd->pw_gid < param.start_gid) ||
+      ((param.end_gid >= param.start_gid) && (param.start_gid != 0) &&
+       (pwd->pw_gid > param.end_gid)))
     return PAM_SUCCESS;
 
   /* Remove the unnecessary '/' from the end of fs parameter */
@@ -158,6 +170,8 @@ PAM_EXTERN int pam_sm_open_session(pam_handle_t *pamh, int flags, int argc,
       strncpy(mntdevice, mnt->mnt_fsname, sizeof(mntdevice));
     }
   }
+  /*The endmntent() function closes the file system description file fd*/
+  endmntent(fd);
 
   if (*mntdevice == '\0') {
     pam_syslog(pamh, LOG_ERR, "Filesystem not found");
