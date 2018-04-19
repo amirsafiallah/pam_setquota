@@ -55,7 +55,7 @@ Modification
 -------------------
 - `startgid` and `endgid` are added.
 - `endmntent` function should be call at the end of `getmntent`
-
+- `Makefile` editied.
 
 Licence and credits
 -------------------
